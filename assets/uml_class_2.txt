@@ -1,0 +1,267 @@
+@startuml
+class KDirectoryEntry {
+    + QString m_path
+    + QVector<QString> m_events
+    + QVector<bool> m_eventsState
+    + QString m_monitorState
+    + QString m_eventsStr
+    + QStringList m_includeExtensions
+    + QStringList m_excludeExtensions
+    + QStringList m_includeFiles
+    + QStringList m_excludeFiles
+    + getPath()
+    + getEvents()
+    + getEventsStr()
+    + getEventStateByIndex(int)
+    + getEventsState()
+    + getIncludeExtensions()
+    + getIncludeExtensionsStr()
+    + getExcludeExtensionsStr()
+    + getExcludeExtensions()
+    + getIncludeFiles()
+    + getExcludeFiles()
+    + setPath(QString)
+    + setEvents(QVector<QString>)
+    + setEventStateByIndex(int, bool)
+    + setMonitorState(QString)
+    + getMonitorState()
+    + setIncludeExtensions(QStringList)
+    + setExcludeExtensions(QStringList)
+    + setIncludeFiles(QStringList)
+    + setExcludeFiles(QStringList)
+}
+note top of KDirectoryEntry
+KDirectoryEntry 类表示一个表格中的条目内容，
+包含监听的目录路径、监控事件、文件扩展名过滤器相关的信息。
+end note
+
+class KDirectoryModel {
+    + QVector<KDirectoryEntry> m_entries
+    + QStringList m_headers
+    + addEntry(KDirectoryEntry)
+    + removeEntry(int)
+    + updateEntry(int, KDirectoryEntry)
+    + getEntry(int)
+    + getEntryIndexByPath(QString)
+}
+note top of KDirectoryModel
+KDirectoryModel 类是一个数据模型，
+用于管理和操作多个 KDirectoryEntry 实例，用于表示表格背后的数据。
+end note
+
+class KDirectoryModelExporter {
+    + exportToFile(KDirectoryModel, QString)
+    + importFromFile(KDirectoryModel, QString)
+    + serializeEntry(KDirectoryEntry)
+    + deserializeEntry(QJsonObject)
+}
+note top of KDirectoryModelExporter
+KDirectoryModelExporter 类是配置的管理类，
+负责将当前的监听配置进行导入和导出。
+end note
+
+class KDirectoryTableView {
+    + pauseMonitoring(QModelIndex)
+    + resumeMonitoring(QModelIndex)
+    + addDirectory()
+    + editDirectory(QString)
+    + editRequested(QModelIndex)
+    + deleteRequested(QModelIndex)
+}
+note top of KDirectoryTableView
+KDirectoryTableView 类是监听目录的表格视图类，
+提供上下文菜单和双击事件处理，用于在表格中展示视图中的数据。
+end note
+
+class KEditDialog {
+    + setPath(QString)
+    + getPath()
+    + setEventsState(QVector<bool>)
+    + getEventsState()
+    + setIncludeExtensions(QStringList)
+    + getIncludeExtensions()
+    + setExcludeExtensions(QStringList)
+    + getExcludeExtensions()
+    + setIncludeFiles(QStringList)
+    + getIncludeFiles()
+    + setExcludeFiles(QStringList)
+    + getExcludeFiles()
+}
+note top of KEditDialog
+KEditDialog 类表示一个对话框，
+对单个监听目录行双击时，
+将弹出一个对话框，用于编辑目录条目的路径、
+事件状态和文件过滤器等细节数据。
+end note
+
+class KFileMonitor {
+    + QHash<QString, QThread*> m_monitorThreads
+    + QHash<QString, KMonitorWorker*> m_monitorWorkers
+    + QHash<QString, QVector<bool>> m_eventsStateMap
+    + startMonitoring(QString)
+    + stopMonitoring(QString)
+    + stopAllMonitoring()
+    + pauseMonitoring(QString)
+    + resumeMonitoring(QString)
+    + setMonitoringState(QString, bool)
+    + setEventsState(QString, QVector<bool>)
+    + setIncludeExtensions(QString, QStringList)
+    + setExcludeExtensions(QString, QStringList)
+    + setIncludeFiles(QString, QStringList)
+    + setExcludeFiles(QString, QStringList)
+    + isMonitoring(QString)
+}
+note top of KFileMonitor
+KFileMonitor 类用于管理文件监控操作，
+处理各个目录监控的启动、停止、暂停和恢复。
+每个需要监听的目录均会创建一个子线程进行单独监听处理。
+end note
+
+class KLogDatabaseHandler {
+    + QQueue<sqlDate> m_pool
+    + QSqlDatabase m_db
+    + QTimer* m_timer
+    + insertLog(QString, QString)
+    + timerInsert()
+    + queryLogs(QDateTime, QDateTime)
+    + searchLogs(QString)
+}
+note top of KLogDatabaseHandler
+KLogDatabaseHandler 类用于管理日志数据库的
+操作，处理日志的插入和查询。
+end note
+
+class KLogManager {
+    + QThread m_dbThread
+    + KLogDatabaseHandler* m_dbHandler
+    + logEvent(QString, QString)
+    + logUserAction(QString)
+    + queryLogs(QDateTime, QDateTime)
+    + searchLogs(QString)
+}
+note top of KLogManager
+KLogManager 类用于管理日志记录和查询，
+提供日志事件的记录和用户操作的日志。
+管理一个子线程，用于进行数据库操作。
+end note
+
+class KMainWindow {
+    + QSystemTrayIcon* m_trayIcon
+    + QTextBrowser* m_logTextBrowser
+    + QTextBrowser* m_activityLogTextBrowser
+    + KDirectoryTableView* m_directoryTableView
+    + KDirectoryModel* m_directoryModel
+    + QTabWidget* m_tabWidget
+    + QLineEdit* m_searchEdit
+    + QDateTimeEdit* m_startTimeEdit
+    + QDateTimeEdit* m_endTimeEdit
+    + QPushButton* m_searchButton
+    + QPushButton* m_queryButton
+    + QPushButton* m_saveLogButton
+    + KMonitoringController* m_monitoringController
+    + QLineEdit* m_quickAddEdit
+    + QPushButton* m_addButton
+    + QTableView* m_logTableView
+    + QStandardItemModel* m_logTableModel
+    + QTimer* m_timer
+    + LogWorker* m_logWorker
+    + QThread* m_logThread
+    + QQueue<QString> m_pendingNotifications
+    + QTimer* m_notificationTimer
+    + onSearchButtonClicked()
+    + onQueryButtonClicked()
+    + onQueryCompleted(QList<sqlDate>)
+    + onSearchCompleted(QList<sqlDate>)
+    + onAddDirectory()
+    + onRemoveDirectory()
+    + onPauseMonitoring(QModelIndex)
+    + onResumeMonitoring(QModelIndex)
+    + onEditDirectory(QString)
+    + onFileAdded(QString)
+    + onFileRemoved(QString)
+    + onFileModified(QString)
+    + onFileRenamed(QString, QString)
+}
+note top of KMainWindow
+KMainWindow 类表示应用程序的主窗口，
+管理主界面的布局和用户交互。
+end note
+
+class KMonitoringController {
+    + KFileMonitor* m_fileMonitor
+    + KLogManager* m_logManager
+    + addDirectory(QString)
+    + removeDirectory(QString)
+    + pauseMonitoring(QString)
+    + resumeMonitoring(QString)
+    + setEventsState(QString, QVector<bool>)
+    + setIncludeExtensions(QString, QStringList)
+    + setExcludeExtensions(QString, QStringList)
+    + setIncludeFiles(QString, QStringList)
+    + setExcludeFiles(QString, QStringList)
+}
+note top of KMonitoringController
+KMonitoringController 类用于管理目录监控操作，
+协调文件监控和日志管理。
+end note
+
+class KMonitorWorker {
+    + QString m_directoryPath
+    + HANDLE m_directoryHandle
+    + bool m_monitoring
+    + bool m_paused
+    + bool m_shouldMonitor
+    + QVector<bool> m_eventsState
+    + QStringList m_includeExtensions
+    + QStringList m_excludeExtensions
+    + QStringList m_includeFiles
+    + QStringList m_excludeFiles
+    + startMonitoring()
+    + stopMonitoring()
+    + pause()
+    + resume()
+    + setShouldMonitor(bool)
+    + isMonitoring()
+    + isPaused()
+    + setEventsState(QVector<bool>)
+    + setIncludeExtensions(QStringList)
+    + setExcludeExtensions(QStringList)
+    + setIncludeFiles(QStringList)
+    + setExcludeFiles(QStringList)
+    + monitorDirectory()
+}
+note top of KMonitorWorker
+KMonitorWorker 类处理具体的目录监控操作，
+调用windowAPI，监听系统中的文件改动事件，响应文件系统事件。
+并将监听结果反馈出来。
+end note
+
+class LogWorker {
+    + QTextBrowser* m_logTextBrowser
+    + QMutex m_mutex
+    + QQueue<QString> m_logQueue
+    + QTimer* m_timer
+    + appendLog(QString)
+    + processLogs()
+}
+note top of LogWorker
+LogWorker 类用于在后台线程中处理日志队列，
+用于管理日志信息的打印，在子线程中运行，优化日志输出效率。
+end note
+
+' Relationships
+KDirectoryModel *-- KDirectoryEntry : 组合
+KDirectoryModelExporter ..> KDirectoryModel : 依赖
+KDirectoryTableView --> KDirectoryModel : 关联
+KMonitoringController o-- KFileMonitor : 聚合
+KMonitoringController o-- KLogManager : 聚合
+KFileMonitor *-- KMonitorWorker : 组合
+KLogManager o-- KLogDatabaseHandler : 聚合
+KMainWindow o-- KMonitoringController : 聚合
+KMainWindow o-- KDirectoryModel : 聚合
+KMainWindow o-- KDirectoryTableView : 聚合
+KMainWindow o-- LogWorker : 聚合
+KMainWindow o-- KEditDialog: 聚合
+KFileMonitor --> KDirectoryEntry : 依赖
+KMonitoringController --> KDirectoryModelExporter : 依赖
+@enduml

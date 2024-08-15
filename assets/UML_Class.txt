@@ -1,0 +1,117 @@
+@startuml
+package "UI Layer" {
+    class MainWindow {
+        + addDirectoryButton_clicked()
+        + removeDirectoryButton_clicked()
+        + pauseButton_clicked()
+        + resumeButton_clicked()
+        + saveConfigButton_clicked()
+        + loadConfigButton_clicked()
+        + searchButton_clicked()
+    }
+
+    class LogDisplay {
+        + displayLog()
+    }
+
+    class ConfigDialog {
+        + show()
+    }
+
+    class TrayIcon {
+        + showNotification(message: String)
+    }
+}
+
+package "Business Logic Layer" {
+    class MonitoringController {
+        + addDirectory(path: String)
+        + pauseMonitoring()
+        + resumeMonitoring()
+        + saveConfig(settings: QSettings)
+        + loadConfig(settings: QSettings)
+        + searchLogs(keyword: String): QList<String>
+    }
+
+    class ConfigManager {
+        + saveConfig(key: String, value: QVariant)
+        + loadConfig(key: String, defaultValue: QVariant): QVariant
+    }
+
+    class LogManager {
+        + logEvent(event: String)
+        + searchLogs(keyword: String): QList<String>
+        + exportLogs(format: String): void
+    }
+
+    class FilterManager {
+        + addFilter(extension: String)
+        + removeFilter(extension: String)
+        + applyFilters(event: String): bool
+    }
+}
+
+package "Monitoring Layer" {
+    interface IFileMonitorStrategy {
+        + startMonitoring(path: String)
+        + stopMonitoring()
+    }
+
+    class SyncFileMonitorStrategy implements IFileMonitorStrategy {
+        + startMonitoring(path: String)
+        + stopMonitoring()
+    }
+
+    class AsyncFileMonitorStrategy implements IFileMonitorStrategy {
+        + startMonitoring(path: String)
+        + stopMonitoring()
+    }
+
+    class FileMonitor {
+        + startMonitoring(path: String)
+        + stopMonitoring()
+        + pause()
+        + resume()
+        + setStrategy(strategy: IFileMonitorStrategy)
+    }
+}
+
+package "Data Access Layer" {
+    class ConfigFile {
+        + readConfig(): Map<String, QVariant>
+        + writeConfig(config: Map<String, QVariant>)
+    }
+
+    class LogFile {
+        + writeLog(event: String)
+        + readLogs(): List<String>
+        + exportLogs(format: String): void
+    }
+}
+
+interface IObserver {
+    + update(message: String)
+}
+
+MainWindow -[hidden]--> LogDisplay
+MainWindow -[hidden]--> ConfigDialog
+MainWindow -[hidden]--> TrayIcon
+MonitoringController -[hidden]--> ConfigManager
+MonitoringController -[hidden]--> LogManager
+MonitoringController -[hidden]--> FilterManager
+MonitoringController -[hidden]--> FileMonitor
+FileMonitor -[hidden]--> IFileMonitorStrategy
+FileMonitor -[hidden]--> IObserver
+LogManager -[hidden]--> LogFile
+ConfigManager -[hidden]--> ConfigFile
+
+MainWindow --> MonitoringController : controls
+MonitoringController --> FileMonitor : manages
+MonitoringController --> ConfigManager : uses
+MonitoringController --> LogManager : uses
+MonitoringController --> FilterManager : uses
+FileMonitor --> IFileMonitorStrategy : uses
+FileMonitor --> IObserver : notifies
+LogManager --> LogFile : accesses
+ConfigManager --> ConfigFile : accesses
+@enduml
